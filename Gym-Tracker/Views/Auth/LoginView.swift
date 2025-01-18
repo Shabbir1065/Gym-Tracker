@@ -1,29 +1,33 @@
 import SwiftUI
 
 struct LoginView: View {
+    @StateObject private var authViewModel = AuthViewModel()
+    @State private var showEmailSignIn = false
+    @State private var mainContentOpacity: Double = 1
+    
     var body: some View {
-        ZStack {
-            // Background Image with Gradient Overlays
-            GeometryReader { geometry in
-                Image("Cover-Photo")
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: geometry.size.width, height: geometry.size.height)
-                    .overlay {
-                        LinearGradient(
-                            colors: [.black.opacity(0.7), .clear, .black.opacity(0.7)],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    }
-            }
-            .ignoresSafeArea()
-            
-            // Content
-            GeometryReader { geometry in
+        NavigationStack {
+            ZStack {
+                // Background Image with Gradient Overlays
+                GeometryReader { geometry in
+                    Image("Cover-Photo")
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                        .overlay {
+                            LinearGradient(
+                                colors: [.black.opacity(0.7), .clear, .black.opacity(0.7)],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        }
+                }
+                .ignoresSafeArea()
+                
+                // Main Content
                 VStack(spacing: 0) {
                     Spacer()
-                        .frame(height: geometry.size.height * 0.05) // Margin from top
+                        .frame(height: 40)
                     
                     // App Title and Subtitle
                     VStack(spacing: 8) {
@@ -36,21 +40,19 @@ struct LoginView: View {
                             .foregroundColor(.white.opacity(0.8))
                     }
                     
-                    Spacer() // Flexible space between title and buttons
+                    Spacer()
                     
                     // Sign in Buttons
-                    VStack(spacing: 16) { // Margin between buttons
+                    VStack(spacing: 16) {
                         // Apple Sign In
-                        Button(action: {
-                            // Handle Apple sign in
-                        }) {
+                        Button(action: {}) {
                             HStack {
                                 Image(systemName: "apple.logo")
                                     .imageScale(.large)
-                                Text("Sign in with Apple")
+                                Text("Sign up with Apple")
                                     .fontWeight(.semibold)
                             }
-                            .foregroundColor(.white)  // White text for Apple button
+                            .foregroundColor(.white)
                             .padding(.horizontal, 16)
                             .frame(maxWidth: .infinity)
                             .frame(height: 50)
@@ -59,16 +61,16 @@ struct LoginView: View {
                         }
                         
                         // Google Sign In
-                        Button(action: {
-                            // Handle Google sign in
-                        }) {
+                        Button(action: {}) {
                             HStack {
-                                Image(systemName: "g.circle.fill")
-                                    .imageScale(.large)
-                                Text("Sign in with Google")
+                                Image("google-logo")
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(height: 24)
+                                Text("Sign up with Google")
                                     .fontWeight(.semibold)
                             }
-                            .foregroundColor(.black)  // Black text for Google button
+                            .foregroundColor(.black)
                             .padding(.horizontal, 16)
                             .frame(maxWidth: .infinity)
                             .frame(height: 50)
@@ -76,17 +78,15 @@ struct LoginView: View {
                             .cornerRadius(12)
                         }
                         
-                        // Email Sign In
-                        Button(action: {
-                            // Handle email sign in
-                        }) {
+                        // Email Sign Up
+                        NavigationLink(destination: EmailSignUpView()) {
                             HStack {
                                 Image(systemName: "envelope.fill")
                                     .imageScale(.large)
-                                Text("Sign in with Email")
+                                Text("Sign up with Email")
                                     .fontWeight(.semibold)
                             }
-                            .foregroundColor(.white)  // White text for Email button
+                            .foregroundColor(.white)
                             .padding(.horizontal, 16)
                             .frame(maxWidth: .infinity)
                             .frame(height: 50)
@@ -95,6 +95,16 @@ struct LoginView: View {
                         }
                     }
                     .padding(.horizontal, 24)
+                    
+                    // Sign In Link
+                    NavigationLink(destination: EmailSignInView()) {
+                        Text("Already have an account? ")
+                            .foregroundColor(.white) +
+                        Text("Log In")
+                            .foregroundColor(.blue)
+                            .underline()
+                    }
+                    .padding(.top, 16)
                     
                     Spacer()
                         .frame(height: 32)
@@ -107,13 +117,14 @@ struct LoginView: View {
                         .padding(.horizontal, 24)
                         .padding(.bottom, 20)
                 }
+                .opacity(mainContentOpacity)
+                .animation(.easeInOut(duration: 0.5), value: mainContentOpacity)
             }
         }
     }
 }
 
-struct LoginView_Previews: PreviewProvider {
-    static var previews: some View {
-        LoginView()
-    }
+#Preview {
+    LoginView()
+        .environmentObject(AuthViewModel())
 }

@@ -1,0 +1,3 @@
+# Secrets and Configuration
+*.env
+Config.swift
