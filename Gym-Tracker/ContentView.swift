@@ -9,78 +9,48 @@ import SwiftUI
 import CoreData
 
 struct ContentView: View {
-    @Environment(\.managedObjectContext) private var viewContext
-
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Item.timestamp, ascending: true)],
-        animation: .default)
-    private var items: FetchedResults<Item>
-
+    @EnvironmentObject private var authViewModel: AuthViewModel
+    @State private var showingLoginView = false
+    
     var body: some View {
-        NavigationView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp!, formatter: itemFormatter)")
-                    } label: {
-                        Text(item.timestamp!, formatter: itemFormatter)
+        ZStack {
+            if authViewModel.isAuthenticated {
+                DashboardView()
+                    .transition(.opacity)
+                    .onAppear {
+                        print("DashboardView appeared - Auth state: \(authViewModel.isAuthenticated)")
                     }
-                }
-                .onDelete(perform: deleteItems)
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
+                    .id("dashboard")
+            } else {
+                LoginView()
+                    .transition(.opacity)
+                    .onAppear {
+                        print("LoginView appeared - Auth state: \(authViewModel.isAuthenticated)")
                     }
-                }
+                    .id("login")
             }
-            Text("Select an item")
+            
+            // Debug overlay
+            VStack {
+                Spacer()
+                Text("Debug: \(authViewModel.debugMessage)")
+                    .font(.caption)
+                    .padding(8)
+                    .background(Color.black.opacity(0.7))
+                    .foregroundColor(.white)
+                    .cornerRadius(8)
+                    .padding()
+            }
+            .allowsHitTesting(false)
         }
-    }
-
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(context: viewContext)
-            newItem.timestamp = Date()
-
-            do {
-                try viewContext.save()
-            } catch {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-                let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
-            }
-        }
-    }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            offsets.map { items[$0] }.forEach(viewContext.delete)
-
-            do {
-                try viewContext.save()
-            } catch {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-                let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
-            }
+        .animation(.default, value: authViewModel.isAuthenticated)
+        .onChange(of: authViewModel.isAuthenticated) { newValue in
+            print("ContentView detected auth state change: \(newValue)")
         }
     }
 }
 
-private let itemFormatter: DateFormatter = {
-    let formatter = DateFormatter()
-    formatter.dateStyle = .short
-    formatter.timeStyle = .medium
-    return formatter
-}()
-
 #Preview {
-    ContentView().environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+    ContentView()
+        .environmentObject(AuthViewModel())
 }

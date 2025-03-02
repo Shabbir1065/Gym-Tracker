@@ -80,11 +80,16 @@ struct EmailSignUpView: View {
     }
     
     private func handleSignUp() {
-        guard acceptedTerms else { return }
+        guard acceptedTerms else { 
+            print("Terms not accepted")
+            return 
+        }
         guard password == confirmPassword else {
+            print("Password mismatch")
             authViewModel.error = AuthError.passwordMismatch
             return
         }
+        print("Sign up button tapped - Email: \(email)")
         authViewModel.signUp(email: email, password: password)
     }
 }

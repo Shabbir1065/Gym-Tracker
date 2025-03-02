@@ -109,6 +109,7 @@ struct EmailSignInView: View {
     }
     
     private func handleSignIn() {
+        print("Sign in button tapped - Email: \(email)")
         authViewModel.signIn(email: email, password: password)
     }
 }

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import GoogleSignIn
 
 @main
 struct Gym_TrackerApp: App {
@@ -14,14 +15,12 @@ struct Gym_TrackerApp: App {
 
     var body: some Scene {
         WindowGroup {
-            if authViewModel.isAuthenticated {
-                ContentView()
-                    .environment(\.managedObjectContext, persistenceController.container.viewContext)
-                    .environmentObject(authViewModel)
-            } else {
-                LoginView()
-                    .environmentObject(authViewModel)
-            }
+            ContentView()
+                .environment(\.managedObjectContext, persistenceController.container.viewContext)
+                .environmentObject(authViewModel)
+                .onOpenURL { url in
+                    GIDSignIn.sharedInstance.handle(url)
+                }
         }
     }
 }
