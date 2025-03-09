@@ -61,19 +61,34 @@ struct LoginView: View {
                         }
                         
                         // Google Sign In
-                        GoogleSignInButton {
+                        Button(action: {
                             Task {
-                                guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                                      let rootViewController = windowScene.windows.first?.rootViewController else {
-                                    print("Failed to get root view controller")
-                                    return
+                                await MainActor.run {
+                                    guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                                        let rootViewController = windowScene.windows.first?.rootViewController else {
+                                        print("Failed to get root view controller")
+                                        return
+                                    }
+                                    
+                                    authViewModel.signInWithGoogle(presentingViewController: rootViewController)
                                 }
-                                
-                                authViewModel.signInWithGoogle(presentingViewController: rootViewController)
                             }
+                        }) {
+                            HStack {
+                                Image("google-logo")
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(height: 24)
+                                Text("Sign up with Google")
+                                    .fontWeight(.semibold)
+                            }
+                            .foregroundColor(.black)
+                            .padding(.horizontal, 16)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 50)
+                            .background(Color.white)
+                            .cornerRadius(12)
                         }
-                        .frame(height: 50)
-                        .padding(.horizontal)
                         
                         // Email Sign Up
                         NavigationLink(destination: EmailSignUpView()) {

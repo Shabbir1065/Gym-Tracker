@@ -154,6 +154,7 @@ class AuthService {
         )
     }
     
+    @MainActor
     func signInWithGoogle(presentingView: UIViewController) async throws -> AuthResponse {
         // Your iOS client ID (from Info.plist)
         let iOSClientID = "396119660338-mf09aj0k1qejdbbervj6d5ta9pdc2ktr.apps.googleusercontent.com"
@@ -163,15 +164,15 @@ class AuthService {
         // Set the configuration for the shared instance.
         GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: iOSClientID, serverClientID: webClientID)
         
-        // Initiate the sign-in process using the presenting view controller.
+        // This will run on the main thread because of @MainActor
         let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: presentingView)
         
-        // Extract the idToken from the result.
+        // Extract the idToken from the result
         guard let idToken = result.user.idToken?.tokenString else {
             throw AuthError.invalidCredential
         }
         
-        // Pass nil explicitly for nonce since Google does not use one.
+        // Pass nil explicitly for nonce since Google does not use one
         let response = try await self.supabase.auth.signInWithIdToken(
             credentials: .init(
                 provider: .google,
@@ -180,7 +181,7 @@ class AuthService {
             )
         )
         
-        // Save the session in the Keychain.
+        // Save the session in the Keychain
         let authSession = AuthSession(
             accessToken: response.accessToken,
             refreshToken: response.refreshToken
@@ -190,7 +191,7 @@ class AuthService {
             refreshToken: response.refreshToken
         )
         
-        // Return the authenticated response.
+        // Return the authenticated response
         return AuthResponse(
             user: User(
                 id: response.user.id.uuidString,
@@ -201,8 +202,6 @@ class AuthService {
         )
     }
 
-
-    
     func signOut() async throws {
         try await supabase.auth.signOut()
         try KeychainManager.shared.clearSession()

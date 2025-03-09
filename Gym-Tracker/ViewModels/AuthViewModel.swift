@@ -72,8 +72,10 @@ class AuthViewModel: ObservableObject {
             guard let self = self else { return }
             
             print("Starting sign out process")
-            self.debugMessage = "Starting sign out process"
-            self.isLoading = true
+            await MainActor.run {
+                self.debugMessage = "Starting sign out process"
+                self.isLoading = true
+            }
             
             do {
                 try await authService.signOut()
@@ -97,8 +99,37 @@ class AuthViewModel: ObservableObject {
     func signInWithGoogle(presentingViewController: UIViewController) {
         Task {
             print("Starting Google sign in process")
-            await self.handleAuth {
-                try await self.authService.signInWithGoogle(presentingView: presentingViewController)
+            // Make sure we're on the main thread for UI operations
+            await MainActor.run {
+                self.isLoading = true
+                self.debugMessage = "Auth operation started"
+                print("Auth operation started")
+            }
+            
+            do {
+                let response = try await self.authService.signInWithGoogle(presentingView: presentingViewController)
+                let hasSession = response.session != nil
+                
+                await MainActor.run {
+                    self.debugMessage = "Auth response received - Has session: \(hasSession)"
+                    print("Auth response received - Has session: \(hasSession)")
+                    
+                    self.isAuthenticated = hasSession
+                    self.showEmailSignIn = false
+                    
+                    self.debugMessage += " | Auth state updated: \(self.isAuthenticated)"
+                    print("Auth state updated: \(self.isAuthenticated)")
+                    
+                    print("Final authentication state after operation: \(self.isAuthenticated)")
+                    self.isLoading = false
+                }
+            } catch {
+                await MainActor.run {
+                    self.error = error
+                    self.debugMessage = "Auth error: \(error.localizedDescription)"
+                    print("Auth error: \(error.localizedDescription)")
+                    self.isLoading = false
+                }
             }
         }
     }
